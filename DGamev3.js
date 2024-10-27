@@ -1,6 +1,8 @@
 // version 3.1
 // - new way to load json file
 // - new way to setup movment in Character class
+// - camera position now is rounded to 1 decimal
+// - game loop is now inside the game class and you can use the draw and update method externally like this: game.update = function (deltaTime) { ... }
 
 // CLASSESS
 
@@ -11,6 +13,7 @@ export class Game {
     this.scaleFactor = 1;
     this.disableContextMenu = true;
     this.isDebug = true;
+    this.lastTime = 0;
 
     this.mouse = {
       clickFlag: false,
@@ -19,7 +22,8 @@ export class Game {
       RMBClickFlag: false,
       Wheel: false,
       WheelClickFlag: false,
-      lastMousePosition: { x: 0, y: 0 },
+      cameraLastMousePosition: { x: 0, y: 0 },
+      mouseMoveLastPosition: { x: 0, y: 0 },
       x: false,
       y: false,
     };
@@ -34,26 +38,32 @@ export class Game {
     };
   }
   updateCamera(x, y) {
-    this.camera.x = x - this.canvas.width / (2 * this.scaleFactor);
-    this.camera.y = y - this.canvas.height / (2 * this.scaleFactor);
+    this.camera.x = +(x - this.canvas.width / (2 * this.scaleFactor)).toFixed(
+      1
+    );
+    this.camera.y = +(y - this.canvas.height / (2 * this.scaleFactor)).toFixed(
+      1
+    );
+
+    // console.log("camera", this.camera.x, this.camera.y);
   }
 
   // this function have to be called on every frame
   moveCameraRMB() {
     if (this.mouse.RMB) {
-      const dx = this.mouse.x - this.mouse.lastMousePosition.x;
-      const dy = this.mouse.y - this.mouse.lastMousePosition.y;
+      const dx = this.mouse.x - this.mouse.cameraLastMousePosition.x;
+      const dy = this.mouse.y - this.mouse.cameraLastMousePosition.y;
 
       this.camera.x += dx * -1;
       this.camera.y += dy * -1;
 
-      this.mouse.lastMousePosition.x = this.mouse.x;
-      this.mouse.lastMousePosition.y = this.mouse.y;
+      this.mouse.cameraLastMousePosition.x = this.mouse.x;
+      this.mouse.cameraLastMousePosition.y = this.mouse.y;
 
       // console.log("camera", this.camera.x, this.camera.y);
     } else {
-      this.mouse.lastMousePosition.x = this.mouse.x;
-      this.mouse.lastMousePosition.y = this.mouse.y;
+      this.mouse.cameraLastMousePosition.x = this.mouse.x;
+      this.mouse.cameraLastMousePosition.y = this.mouse.y;
     }
   }
 
@@ -117,13 +127,56 @@ export class Game {
 
     this.updateCamera(0, 0);
 
-    // console.log(this);
+    //  bind the method to your class to make sure this points to your class.
+    requestAnimationFrame(this.gameLoop.bind(this));
   }
 
   clearRect() {
     this.ctx.fillStyle = "#898989";
     this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
+
+  // Game loop
+  gameLoop(timestamp) {
+    const deltaTime = +(timestamp - this.lastTime).toFixed(2);
+    this.lastTime = timestamp;
+
+    this.update(deltaTime);
+    this.draw(deltaTime);
+
+    // execute once if mouse is pressed
+    if (this.mouse.isMouseDown && !this.mouse.clickFlag) {
+      this.mouse.clickFlag = true;
+
+      // execute once if mouse is pressed
+      this.onClickLMB();
+    } else if (!this.mouse.isMouseDown && this.mouse.clickFlag) {
+      this.mouse.clickFlag = false;
+
+      // execute once if mouse is unpressed
+      this.onUnclickLMB();
+    }
+
+    // execute every mouse move
+    if (
+      this.mouse.x !== this.mouse.mouseMoveLastPosition.x ||
+      this.mouse.y !== this.mouse.mouseMoveLastPosition.y
+    ) {
+      this.onMouseMove();
+      this.mouse.mouseMoveLastPosition.x = this.mouse.x;
+      this.mouse.mouseMoveLastPosition.y = this.mouse.y;
+    }
+
+    //  bind the method to your class to make sure this points to your class.
+    requestAnimationFrame(this.gameLoop.bind(this));
+  }
+
+  update(deltaTime) {}
+  draw(deltaTime) {}
+
+  onClickLMB() {}
+  onUnclickLMB() {}
+  onMouseMove() {}
 }
 
 export class Sprite {
@@ -281,32 +334,32 @@ export class Sprite {
       : false;
   }
 
-  /**
-   * Check on which side of the tile current sprite is located
-   * @param {Object} tile Tile to check
-   * @returns {String} Side of the tile where the sprite is located (top, right, bottom, left)
-   */
-  getSideOfTile(tile) {
-    const isAbove = this.y + this.height / 2 >= tile.y + tile.height / 2;
-    const isBelow = this.y + this.height / 2 <= tile.y + tile.height / 2;
-    const isLeft = this.x + this.width / 2 >= tile.x + tile.width / 2;
-    const isRight = this.x + this.width / 2 <= tile.x + tile.width / 2;
+  // /**
+  //  * Check on which side of the tile current sprite is located
+  //  * @param {Object} tile Tile to check
+  //  * @returns {String} Side of the tile where the sprite is located (top, right, bottom, left)
+  //  */
+  // getSideOfTile(tile) {
+  //   const isAbove = this.y + this.height / 2 >= tile.y + tile.height / 2;
+  //   const isBelow = this.y + this.height / 2 <= tile.y + tile.height / 2;
+  //   const isLeft = this.x + this.width / 2 >= tile.x + tile.width / 2;
+  //   const isRight = this.x + this.width / 2 <= tile.x + tile.width / 2;
 
-    if (isLeft) {
-      return "left";
-    }
-    if (isRight) {
-      return "right";
-    }
-    if (isAbove) {
-      return "top";
-    }
-    if (isBelow) {
-      return "bottom";
-    }
+  //   if (isLeft) {
+  //     return "left";
+  //   }
+  //   if (isRight) {
+  //     return "right";
+  //   }
+  //   if (isAbove) {
+  //     return "top";
+  //   }
+  //   if (isBelow) {
+  //     return "bottom";
+  //   }
 
-    return null;
-  }
+  //   return null;
+  // }
 
   addTexture(fromX, fromY, fromWidth, fromHeight, image) {
     this.viewType = "texture";
