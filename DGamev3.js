@@ -1,3 +1,7 @@
+// version 3.1
+// - new way to load json file
+// - new way to setup movment in Character class
+
 // CLASSESS
 
 export class Game {
@@ -29,7 +33,7 @@ export class Game {
       y: 0,
     };
   }
-  setCamera(x, y) {
+  updateCamera(x, y) {
     this.camera.x = x - this.canvas.width / (2 * this.scaleFactor);
     this.camera.y = y - this.canvas.height / (2 * this.scaleFactor);
   }
@@ -111,7 +115,7 @@ export class Game {
     this.ctx.scale(this.scaleFactor, this.scaleFactor);
     this.ctx.imageSmoothingEnabled = false;
 
-    this.setCamera(0, 0);
+    this.updateCamera(0, 0);
 
     // console.log(this);
   }
