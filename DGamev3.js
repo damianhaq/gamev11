@@ -471,12 +471,13 @@ export class Character extends Sprite {
     // these functions only set velocity
 
     // zmiana animacji
-    if (this.currentAnim !== "idle" && this.vel.getLen() === 0) {
-      this.setCurrentAnim("idle");
-    }
-    if (this.vel.getLen() > 0) {
-      this.setCurrentAnim("run");
-    }
+    // TODO: this.setCurrentAnim("idle"); powoduje błąd
+    // if (this.currentAnim !== "idle" && this.vel.getLen() === 0) {
+    //   this.setCurrentAnim("idle");
+    // }
+    // if (this.vel.getLen() > 0) {
+    //   this.setCurrentAnim("run");
+    // }
 
     // odwrócenie animacji w poziomie
     if (this.vel.x < 0) {
@@ -759,23 +760,44 @@ export class Character extends Sprite {
 }
 
 export class Tiled {
-  constructor(game, jsonData, image) {
+  constructor(game, jsonFilePath, image) {
     this.game = game;
-    this.jsonData = jsonData;
+    this.jsonData = null;
     this.image = image;
 
     this.mapSize = null;
 
     this.collidable = [];
     this.highlight = [];
-    this.preload();
+    // this.preload();
+
+    // before i import json file like this and i have prettier errrors
+    // import jsonData from "./gamev11map.json" with { type: "json" };
+    //
+    // we have to load json file like this
+    this.loadJson(jsonFilePath);
   }
 
-  preload() {
-    // get world bounds
-    this.mapSize = this.getMapSize(); // need it for draw world bounds
+  // function that load local json file asynchronously
+  async loadJson(path) {
+    try {
+      console.log(`TILED: Loading JSON file: ${path}`);
+      const response = await fetch(path);
+      const json = await response.json();
+
+      this.jsonData = json;
+    } catch (error) {
+      console.error(`Error loading JSON file: ${error}`);
+    }
   }
 
+  // // DISABLED
+  // preload() {
+  //   // get world bounds
+  //   this.mapSize = this.getMapSize(); // need it for draw world bounds
+  // }
+
+  // DISABLED
   getWorldBounds() {
     // check if mapSize is null
     if (this.mapSize === null) {
@@ -792,6 +814,7 @@ export class Tiled {
     };
   }
 
+  // DISABLED
   /**
    * Checks if the given object is fully inside the map boundaries.
    *
@@ -820,6 +843,9 @@ export class Tiled {
   }
 
   addLayerToCollidable(layerName) {
+    // check if jsonData is loaded
+    if (this.jsonData === null) return;
+
     const layer = this.jsonData.layers.filter((el) => el.name === layerName)[0];
 
     layer.chunks.forEach((chunk) => {
@@ -837,88 +863,90 @@ export class Tiled {
     });
   }
 
-  drawDebug() {
-    if (!this.game.isDebug) return;
+  //DISABLED
+  // drawDebug() {
+  //   if (!this.game.isDebug) return;
 
-    // draw world bounds
-    // check if mapSize is null
-    if (this.mapSize === null) {
-      console.warn(
-        "Map size is null. Please set it before drawing world bounds."
-      );
-    } else {
-      drawRectOnMap(
-        0,
-        0,
-        this.mapSize.width,
-        this.mapSize.height,
-        this.game.ctx,
-        this.game.camera
-      );
-    }
+  //   // draw world bounds
+  //   // check if mapSize is null
+  //   if (this.mapSize === null) {
+  //     console.warn(
+  //       "Map size is null. Please set it before drawing world bounds."
+  //     );
+  //   } else {
+  //     drawRectOnMap(
+  //       0,
+  //       0,
+  //       this.mapSize.width,
+  //       this.mapSize.height,
+  //       this.game.ctx,
+  //       this.game.camera
+  //     );
+  //   }
 
-    // draw collidable
-    this.collidable.forEach((el) =>
-      drawRectOnMap(el.x, el.y, 16, 16, this.game.ctx, this.game.camera)
-    );
+  //   // draw collidable
+  //   this.collidable.forEach((el) =>
+  //     drawRectOnMap(el.x, el.y, 16, 16, this.game.ctx, this.game.camera)
+  //   );
 
-    // draw highlight
-    this.highlight.forEach((el) =>
-      drawRectOnMap(
-        el.x,
-        el.y,
-        el.width,
-        el.height,
-        this.game.ctx,
-        this.game.camera,
-        "red"
-      )
-    );
+  //   // draw highlight
+  //   this.highlight.forEach((el) =>
+  //     drawRectOnMap(
+  //       el.x,
+  //       el.y,
+  //       el.width,
+  //       el.height,
+  //       this.game.ctx,
+  //       this.game.camera,
+  //       "red"
+  //     )
+  //   );
 
-    // highlight tile
-  }
+  //   // highlight tile
+  // }
 
-  highlightTiles(tiles) {
-    this.highlight = tiles;
-  }
+  // highlightTiles(tiles) {
+  //   this.highlight = tiles;
+  // }
 
-  getMapSize() {
-    // Pobiera rozmiar mapy na podstawie ostatniego chunka w każdym warstwie.
-    let width = 0;
-    let height = 0;
+  // DISABLED
+  // getMapSize() {
+  //   // Pobiera rozmiar mapy na podstawie ostatniego chunka w każdym warstwie.
+  //   let width = 0;
+  //   let height = 0;
 
-    this.jsonData.layers.forEach((layer) => {
-      // sprawdza ostatni chunk w każdej warstwie i ten najwiekszy zapisuje
+  //   this.jsonData.layers.forEach((layer) => {
+  //     // sprawdza ostatni chunk w każdej warstwie i ten najwiekszy zapisuje
 
-      const lastChunk = layer.chunks[layer.chunks.length - 1];
+  //     const lastChunk = layer.chunks[layer.chunks.length - 1];
 
-      // sprawdzamy, czy rozmiar mapy musi zostać zaktualizowany
-      // największa wartość x koordynaty ostatniego chunka w warstwie + szerokość tego chunka
-      // jest większa niż aktualny rozmiar mapy w osi x
-      if (
-        lastChunk.x * this.jsonData.tilewidth +
-          lastChunk.width * this.jsonData.tilewidth >
-        width
-      ) {
-        width =
-          lastChunk.x * this.jsonData.tilewidth +
-          lastChunk.width * this.jsonData.tilewidth;
-      }
-      // największa wartość y koordynaty ostatniego chunka w warstwie + wysokość tego chunka
-      // jest większa niż aktualny rozmiar mapy w osi y
-      if (
-        lastChunk.y * this.jsonData.tileheight +
-          lastChunk.height * this.jsonData.tileheight >
-        height
-      ) {
-        height =
-          lastChunk.y * this.jsonData.tileheight +
-          lastChunk.height * this.jsonData.tileheight;
-      }
-    });
+  //     // sprawdzamy, czy rozmiar mapy musi zostać zaktualizowany
+  //     // największa wartość x koordynaty ostatniego chunka w warstwie + szerokość tego chunka
+  //     // jest większa niż aktualny rozmiar mapy w osi x
+  //     if (
+  //       lastChunk.x * this.jsonData.tilewidth +
+  //         lastChunk.width * this.jsonData.tilewidth >
+  //       width
+  //     ) {
+  //       width =
+  //         lastChunk.x * this.jsonData.tilewidth +
+  //         lastChunk.width * this.jsonData.tilewidth;
+  //     }
+  //     // największa wartość y koordynaty ostatniego chunka w warstwie + wysokość tego chunka
+  //     // jest większa niż aktualny rozmiar mapy w osi y
+  //     if (
+  //       lastChunk.y * this.jsonData.tileheight +
+  //         lastChunk.height * this.jsonData.tileheight >
+  //       height
+  //     ) {
+  //       height =
+  //         lastChunk.y * this.jsonData.tileheight +
+  //         lastChunk.height * this.jsonData.tileheight;
+  //     }
+  //   });
 
-    return { width, height };
-  }
+  //   return { width, height };
+  // }
 
   getTilePosFromSpritesheet(
     id,
@@ -998,6 +1026,12 @@ export class Tiled {
   }
 
   drawLayer(layerName) {
+    // check if jsonData is loaded
+    if (this.jsonData === null) {
+      console.warn("json file is no loaded yet, skipping drawLayer");
+      return;
+    }
+
     const layer = this.jsonData.layers.filter((el) => el.name === layerName)[0];
 
     for (let i = 0; i < layer.chunks.length; i++) {
