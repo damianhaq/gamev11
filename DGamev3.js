@@ -451,6 +451,8 @@ export class Character extends Sprite {
     this.vel = new Vector(0, 0);
     this.acc = new Vector(0, 0);
 
+    this.controllsType = null; // "WSAD", "MOUSE"
+
     this.collisionWithSprites = [];
     this.isCollisionWithCollidableTiles = false;
 
@@ -487,6 +489,55 @@ export class Character extends Sprite {
     }
 
     this.collideManager();
+
+    if (this.controllsType === "WSAD") {
+      // create a temporary vector and change it with pressed keys
+      // add it to velocity
+      let tempVel = new Vector(0, 0); // tymczasowy vector
+      if (this.game.keys.key[65]) tempVel.x = -1; // if pressed a
+      if (this.game.keys.key[68]) tempVel.x = 1; // if pressed d
+      if (this.game.keys.key[87]) tempVel.y = -1; // if pressed w
+      if (this.game.keys.key[83]) tempVel.y = 1; // if pressed s
+
+      tempVel.normalize();
+      tempVel.mul(0.5, 0.5);
+
+      this.vel = tempVel;
+    } else if (this.controllsType === "MOUSE") {
+      // set destination point to mouse position
+      if (this.game.mouse.isMouseDown) {
+        // creating this.destinationPoint
+        this.destinationPoint = new Vector(
+          this.game.mouse.x + this.game.camera.x,
+          this.game.mouse.y + this.game.camera.y
+        );
+      }
+
+      // move to destination point
+      if (this.destinationPoint) {
+        // calculate range to destination point without mutating destination point
+        const rangeToDestinationPoint = this.destinationPoint
+          .clone()
+          .sub({ x: this.x, y: this.y })
+          .getLen();
+        // console.log(rangeToDestinationPoint);
+
+        let tempVel = new Vector(0, 0);
+
+        tempVel.x = this.destinationPoint.x - this.x;
+        tempVel.y = this.destinationPoint.y - this.y;
+
+        tempVel.normalize();
+
+        tempVel.mul(0.5, 0.5);
+
+        if (rangeToDestinationPoint < 1) {
+          tempVel = new Vector(0, 0);
+          this.destinationPoint = null;
+        }
+        this.vel = tempVel;
+      }
+    }
 
     // add vel to pos
     this.x += this.vel.x;
@@ -548,21 +599,12 @@ export class Character extends Sprite {
     this.vel = tempVel;
   }
 
-  WSADMove(game) {
-    // create a temporary vector and change it with pressed keys
-    // add it to velocity
-    let tempVel = new Vector(0, 0); // tymczasowy vector
-    if (game.keys.key[65]) tempVel.x = -1; // if pressed a
-    if (game.keys.key[68]) tempVel.x = 1; // if pressed d
-    if (game.keys.key[87]) tempVel.y = -1; // if pressed w
-    if (game.keys.key[83]) tempVel.y = 1; // if pressed s
+  enableWSADMove() {
+    this.controllsType = "WSAD";
+  }
 
-    tempVel.normalize();
-    tempVel.mul(0.5, 0.5);
-
-    this.vel = tempVel;
-
-    // return tempVel;
+  enableMOUSEMove() {
+    this.controllsType = "MOUSE";
   }
 
   moveToPointWIP(x, y) {
@@ -571,41 +613,6 @@ export class Character extends Sprite {
     tempVel.normalize();
     tempVel.mul(0.5, 0.5);
     this.vel = tempVel;
-  }
-
-  moveToClickPoint(game) {
-    // set destination point to mouse position
-    if (game.mouse.isMouseDown) {
-      this.destinationPoint = new Vector(
-        game.mouse.x + game.camera.x,
-        game.mouse.y + game.camera.y
-      );
-    }
-
-    // move to destination point
-    if (this.destinationPoint) {
-      // calculate range to destination point without mutating destination point
-      const rangeToDestinationPoint = this.destinationPoint
-        .clone()
-        .sub({ x: this.x, y: this.y })
-        .getLen();
-      // console.log(rangeToDestinationPoint);
-
-      let tempVel = new Vector(0, 0);
-
-      tempVel.x = this.destinationPoint.x - this.x;
-      tempVel.y = this.destinationPoint.y - this.y;
-
-      tempVel.normalize();
-
-      tempVel.mul(0.5, 0.5);
-
-      if (rangeToDestinationPoint < 1) {
-        tempVel = new Vector(0, 0);
-        this.destinationPoint = null;
-      }
-      this.vel = tempVel;
-    }
   }
 
   collideWithCollidableTiled() {

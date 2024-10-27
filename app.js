@@ -10,10 +10,15 @@ bigSpritev7.src = "BigSpritev7.png";
 const map = new Tiled(game, "./gamev11map.json", bigSpritev7);
 
 const player = new Character(0, 0, 16, 22, game);
+// player.enableWSADMove();
+player.enableMOUSEMove();
+
 player.addAnim("stand", 0, 10, 16, 22, 4, bigSpritev7);
 player.addAnim("run", 64, 10, 16, 22, 4, bigSpritev7);
 player.setCurrentAnim("stand");
-console.log(player);
+
+game.setCamera(player.x, player.y);
+console.log("player", player);
 
 // Game loop
 requestAnimationFrame(gameLoop);
