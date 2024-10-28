@@ -141,6 +141,8 @@ export class Game {
     const deltaTime = +(timestamp - this.lastTime).toFixed(2);
     this.lastTime = timestamp;
 
+    // console log fps
+    console.log(`FPS: ${1000 / deltaTime}`);
     this.update(deltaTime);
     this.draw(deltaTime);
 
