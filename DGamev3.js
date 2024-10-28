@@ -499,6 +499,22 @@ export class Sprite {
   }
 }
 
+export class Projectile extends Sprite {
+  constructor(x, y, width, height, game, velX, velY) {
+    super(x, y, width, height, game);
+
+    this.x = x;
+    this.y = y;
+    this.vel = new Vector(velX, velY);
+    this.acc = new Vector(0, 0);
+  }
+
+  update() {
+    this.x += this.vel.x;
+    this.y += this.vel.y;
+  }
+}
+
 export class Character extends Sprite {
   constructor(x, y, width, height, game) {
     super(x, y, width, height, game);

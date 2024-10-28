@@ -2,6 +2,7 @@ import {
   Character,
   drawLineOnMap,
   Game,
+  Projectile,
   Sprite,
   Tiled,
   Vector,
@@ -10,6 +11,7 @@ import {
 
 const game = new Game();
 game.init("canvas", 1200, 1000, 3);
+game.isDebug = false;
 
 const bigSpritev7 = new Image();
 bigSpritev7.src = "BigSpritev7.png";
@@ -26,16 +28,16 @@ player.setCurrentAnim("stand");
 
 console.log("player", player);
 
-const particles = [];
+const projectiles = [];
 
 game.update = function (deltaTime) {
   player.update(deltaTime);
   game.updateCamera(player.x, player.y);
   // game.moveCameraRMB();
 
-  // particles.forEach((particle) => {
-  //   particle.update(deltaTime);
-  // });
+  projectiles.forEach((el) => {
+    el.update(deltaTime);
+  });
 
   // console.log(game.mouse.cameraLastMousePosition);
 };
@@ -45,8 +47,8 @@ game.draw = function (deltaTime) {
   map.drawLayer("grass");
   player.draw(deltaTime);
 
-  particles.forEach((particle) => {
-    particle.draw(deltaTime);
+  projectiles.forEach((el) => {
+    el.draw(deltaTime);
   });
 };
 
@@ -57,19 +59,24 @@ game.onClickLMB = function () {
     Math.round(game.mouse.x + game.camera.x - player.x),
     Math.round(game.mouse.y + game.camera.y - player.y)
   );
-  console.log("mouseVector", mouseVector);
 
-  const particle = new Sprite(
+  // normalize and multiply by 0.5
+  mouseVector.normalize();
+  mouseVector.mul(0.5, 0.5);
+
+  const projectile = new Projectile(
     mouseVector.x + player.x,
     mouseVector.y + player.y,
     16,
     22,
-    game
+    game,
+    mouseVector.x,
+    mouseVector.ysd
   );
 
-  particle.addAnim("stand", 0, 10, 16, 22, 4, bigSpritev7);
+  projectile.addAnim("stand", 0, 10, 16, 22, 4, bigSpritev7);
 
-  particles.push(particle);
+  projectiles.push(projectile);
 };
 
 game.onMouseMove = function () {
@@ -81,13 +88,32 @@ game.onMouseMove = function () {
     Math.round(game.mouse.y + game.camera.y - player.y)
   );
 
-  // draw line from player to mouse position
-  drawLineOnMap(
-    player.x,
-    player.y,
+  // normalize and multiply by 0.5
+  mouseVector.normalize();
+  mouseVector.mul(0.5, 0.5);
+
+  const projectile = new Projectile(
     mouseVector.x + player.x,
     mouseVector.y + player.y,
-    game.ctx,
-    game.camera
+    16,
+    22,
+    game,
+    mouseVector.x,
+    mouseVector.y
   );
+
+  projectile.addAnim("stand", 0, 10, 16, 22, 4, bigSpritev7);
+
+  projectiles.push(projectile);
+  console.log(projectiles.length);
+
+  // // draw line from player to mouse position
+  // drawLineOnMap(
+  //   player.x,
+  //   player.y,
+  //   mouseVector.x + player.x,
+  //   mouseVector.y + player.y,
+  //   game.ctx,
+  //   game.camera
+  // );
 };
