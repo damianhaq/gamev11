@@ -14,7 +14,10 @@ game.init("canvas", 1200, 1000, 3);
 game.isDebug = false;
 
 const bigSpritev7 = new Image();
-bigSpritev7.src = "BigSpritev7.png";
+bigSpritev7.src = "assets/BigSpritev7.png";
+
+const flameImg = new Image();
+flameImg.src = "assets/579.png";
 
 const map = new Tiled(game, "./gamev11map.json", bigSpritev7);
 
@@ -25,6 +28,7 @@ player.enableWSADMove();
 player.addAnim("stand", 0, 10, 16, 22, 4, bigSpritev7);
 player.addAnim("run", 64, 10, 16, 22, 4, bigSpritev7);
 player.setCurrentAnim("stand");
+player.isOriginInCenter = true;
 
 console.log("player", player);
 
@@ -62,58 +66,49 @@ game.onClickLMB = function () {
 
   // normalize and multiply by 0.5
   mouseVector.normalize();
-  mouseVector.mul(0.5, 0.5);
+  // mouseVector.mul(0.1, 0.1);
 
-  const projectile = new Projectile(
+  // get angle in degrees
+  const angle = mouseVector.getAngleDeg();
+
+  const flame = new Projectile(
     mouseVector.x + player.x,
     mouseVector.y + player.y,
-    16,
-    22,
-    game,
-    mouseVector.x,
-    mouseVector.ysd
-  );
-
-  projectile.addAnim("stand", 0, 10, 16, 22, 4, bigSpritev7);
-
-  projectiles.push(projectile);
-};
-
-game.onMouseMove = function () {
-  console.log("testmouse move");
-  // cerate vector from player to mouse position
-
-  const mouseVector = new Vector(
-    Math.round(game.mouse.x + game.camera.x - player.x),
-    Math.round(game.mouse.y + game.camera.y - player.y)
-  );
-
-  // normalize and multiply by 0.5
-  mouseVector.normalize();
-  mouseVector.mul(0.5, 0.5);
-
-  const projectile = new Projectile(
-    mouseVector.x + player.x,
-    mouseVector.y + player.y,
-    16,
-    22,
+    64,
+    64,
     game,
     mouseVector.x,
     mouseVector.y
   );
 
-  projectile.addAnim("stand", 0, 10, 16, 22, 4, bigSpritev7);
+  flame.addAnim("fly", 0, 0, 64, 64, 11, flameImg);
 
-  projectiles.push(projectile);
-  console.log(projectiles.length);
+  flame.anim.fly.frameTime = 50;
+  flame.anim.fly.rotateDeg = angle + 180;
+  flame.isOriginInCenter = true;
 
-  // // draw line from player to mouse position
-  // drawLineOnMap(
-  //   player.x,
-  //   player.y,
+  projectiles.push(flame);
+  console.log(projectiles);
+};
+
+game.onMouseMove = function () {
+  // // console.log("testmouse move");
+  // // cerate vector from player to mouse position
+  // const mouseVector = new Vector(
+  //   Math.round(game.mouse.x + game.camera.x - player.x),
+  //   Math.round(game.mouse.y + game.camera.y - player.y)
+  // );
+  // // normalize and multiply by 0.5
+  // mouseVector.normalize();
+  // mouseVector.mul(0.5, 0.5);
+  // const projectile = new Projectile(
   //   mouseVector.x + player.x,
   //   mouseVector.y + player.y,
-  //   game.ctx,
-  //   game.camera
+  //   16,
+  //   22,
+  //   game,
+  //   mouseVector.x,
+  //   mouseVector.y
   // );
+  // projectile.addAnim("stand", 0, 10, 16, 22, 4, bigSpritev7);
 };

@@ -3,6 +3,7 @@
 // - new way to setup movment in Character class
 // - camera position now is rounded to 1 decimal
 // - game loop is now inside the game class and you can use the draw and update method externally like this: game.update = function (deltaTime) { ... }
+// - originInCenter variable in Sprite class
 
 // CLASSESS
 
@@ -141,8 +142,6 @@ export class Game {
     const deltaTime = +(timestamp - this.lastTime).toFixed(2);
     this.lastTime = timestamp;
 
-    // console log fps
-    console.log(`FPS: ${1000 / deltaTime}`);
     this.update(deltaTime);
     this.draw(deltaTime);
 
@@ -191,6 +190,9 @@ export class Sprite {
 
     this.isFlipX = false;
     this.isFlipY = false;
+
+    this.isOriginInCenter = false;
+
     this.animName = "unset";
 
     this.viewType = "unset"; // unset, texture, anim
@@ -472,8 +474,10 @@ export class Sprite {
         this.anim[this.animName].fromY,
         this.anim[this.animName].fromWidth,
         this.anim[this.animName].fromHeight,
-        this.x - this.game.camera.x,
-        this.y - this.game.camera.y,
+        (this.isOriginInCenter ? this.x - this.width / 2 : this.x) -
+          this.game.camera.x,
+        (this.isOriginInCenter ? this.y - this.height / 2 : this.y) -
+          this.game.camera.y,
         this.anim[this.animName].fromWidth,
         this.anim[this.animName].fromHeight,
         this.isFlipX,
@@ -490,8 +494,8 @@ export class Sprite {
     // hitbox
     if (this.game.isDebug) {
       drawRectOnMap(
-        this.x,
-        this.y,
+        this.isOriginInCenter ? this.x - this.width / 2 : this.x,
+        this.isOriginInCenter ? this.y - this.height / 2 : this.y,
         this.width,
         this.height,
         this.game.ctx,
