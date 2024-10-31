@@ -558,25 +558,8 @@ export class Character extends Sprite {
   }
 
   // movement based on acceleration
-  #applyAcc(angleDeg) {
-    // //makign vector a acc
-    // vector.setMag(this.acc);
-    // add acceleration to velocity
-    const vector = new Vector(this.accSpeed, this.accSpeed);
-    vector.setAngleDeg(angleDeg);
-    console.log(vector);
-    // vector.setMag(this.acc);
-    // this.vel.add(vector);
-    // limit to moveSpeed
-    this.vel.limit(this.moveSpeed);
-    // this.vel.add(new Vector(-this.acc, -this.acc));
-  }
 
   update() {
-    // this.WSADMove();
-    // this.mouseMove();
-    // these functions only set velocity
-
     // zmiana animacji
     // TODO: this.setCurrentAnim("idle"); powoduje błąd
     // if (this.currentAnim !== "idle" && this.vel.getLen() === 0) {
@@ -625,26 +608,6 @@ export class Character extends Sprite {
           this.vel.y = +(this.vel.y + this.accSpeed).toFixed(2);
         }
       }
-
-      // if none of the keys are pressed, set acceleration to 0
-      // if (
-      //   !this.game.keys.key[65] &&
-      //   !this.game.keys.key[68] &&
-      //   !this.game.keys.key[87] &&
-      //   !this.game.keys.key[83]
-      // ) {
-      //   // slow down until stopped
-      //   if (this.vel.getLen() > 0) {
-      //     const slowDown = 0.2;
-      //     this.acc.set(this.vel.x * -slowDown, this.vel.y * -slowDown);
-      //   } else {
-      //     this.acc.set(0, 0);
-      //   }
-      // }
-
-      // add acc to velocity
-      // this.vel.add(this.acc);
-      // this.vel.limit(this.moveSpeed);
     } else if (this.controllsType === "MOUSE") {
       // set destination point to mouse position
       if (this.game.mouse.isMouseDown) {
@@ -680,8 +643,6 @@ export class Character extends Sprite {
         this.vel = tempVel;
       }
     }
-
-    // this.#move(tempVel);
 
     // add acc to vel
     this.vel.add(this.acc);
