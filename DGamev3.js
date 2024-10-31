@@ -15,6 +15,7 @@ export class Game {
     this.disableContextMenu = true;
     this.isDebug = true;
     this.lastTime = 0;
+    this.fpsCounter = 0;
 
     this.mouse = {
       clickFlag: false,
@@ -141,9 +142,17 @@ export class Game {
   gameLoop(timestamp) {
     const deltaTime = +(timestamp - this.lastTime).toFixed(2);
     this.lastTime = timestamp;
+    const fps = 1000 / deltaTime;
 
     this.update(deltaTime);
     this.draw(deltaTime);
+
+    const skipFactor = 100;
+    if (Math.floor(timestamp / 10) % skipFactor === 0) {
+      // kod który bedzie sie wykonywal co skipFactor petli
+      this.fpsCounter = Math.round(fps);
+    }
+    drawText(`FPS: ${this.fpsCounter}`, 10, 10, this);
 
     // execute once if mouse is pressed
     if (this.mouse.isMouseDown && !this.mouse.clickFlag) {
@@ -529,6 +538,8 @@ export class Character extends Sprite {
     this.y = y;
     this.vel = new Vector(0, 0);
     this.acc = new Vector(0, 0);
+    this.accSpeed = 0.02;
+    this.moveSpeed = 1;
 
     this.controllsType = null; // "WSAD", "MOUSE"
 
@@ -544,6 +555,21 @@ export class Character extends Sprite {
     //   defense: 10,
     //   movementSpeed: 10,
     // };
+  }
+
+  // movement based on acceleration
+  #applyAcc(angleDeg) {
+    // //makign vector a acc
+    // vector.setMag(this.acc);
+    // add acceleration to velocity
+    const vector = new Vector(this.accSpeed, this.accSpeed);
+    vector.setAngleDeg(angleDeg);
+    console.log(vector);
+    // vector.setMag(this.acc);
+    // this.vel.add(vector);
+    // limit to moveSpeed
+    this.vel.limit(this.moveSpeed);
+    // this.vel.add(new Vector(-this.acc, -this.acc));
   }
 
   update() {
@@ -570,18 +596,55 @@ export class Character extends Sprite {
     this.collideManager();
 
     if (this.controllsType === "WSAD") {
-      // create a temporary vector and change it with pressed keys
-      // add it to velocity
-      let tempVel = new Vector(0, 0); // tymczasowy vector
-      if (this.game.keys.key[65]) tempVel.x = -1; // if pressed a
-      if (this.game.keys.key[68]) tempVel.x = 1; // if pressed d
-      if (this.game.keys.key[87]) tempVel.y = -1; // if pressed w
-      if (this.game.keys.key[83]) tempVel.y = 1; // if pressed s
+      // when i press one of the keys, apply accSpeed value to acc Vector
+      if (this.game.keys.key[65]) {
+        this.acc.x = -this.accSpeed; // if pressed a
+      } else if (this.game.keys.key[68]) {
+        this.acc.x = this.accSpeed; // if pressed d
+      } else {
+        // dont accelerate
+        this.acc.x = 0;
 
-      tempVel.normalize();
-      tempVel.mul(0.5, 0.5);
+        // slow down
+        if (this.vel.x > 0) {
+          this.vel.x = +(this.vel.x - this.accSpeed).toFixed(2);
+        } else if (this.vel.x < 0) {
+          this.vel.x = +(this.vel.x + this.accSpeed).toFixed(2);
+        }
+      }
+      if (this.game.keys.key[87]) {
+        this.acc.y = -this.accSpeed; // if pressed w
+      } else if (this.game.keys.key[83]) {
+        this.acc.y = this.accSpeed; // if pressed s
+      } else {
+        this.acc.y = 0;
 
-      this.vel = tempVel;
+        if (this.vel.y > 0) {
+          this.vel.y = +(this.vel.y - this.accSpeed).toFixed(2);
+        } else if (this.vel.y < 0) {
+          this.vel.y = +(this.vel.y + this.accSpeed).toFixed(2);
+        }
+      }
+
+      // if none of the keys are pressed, set acceleration to 0
+      // if (
+      //   !this.game.keys.key[65] &&
+      //   !this.game.keys.key[68] &&
+      //   !this.game.keys.key[87] &&
+      //   !this.game.keys.key[83]
+      // ) {
+      //   // slow down until stopped
+      //   if (this.vel.getLen() > 0) {
+      //     const slowDown = 0.2;
+      //     this.acc.set(this.vel.x * -slowDown, this.vel.y * -slowDown);
+      //   } else {
+      //     this.acc.set(0, 0);
+      //   }
+      // }
+
+      // add acc to velocity
+      // this.vel.add(this.acc);
+      // this.vel.limit(this.moveSpeed);
     } else if (this.controllsType === "MOUSE") {
       // set destination point to mouse position
       if (this.game.mouse.isMouseDown) {
@@ -617,6 +680,11 @@ export class Character extends Sprite {
         this.vel = tempVel;
       }
     }
+
+    // this.#move(tempVel);
+
+    // add acc to vel
+    this.vel.add(this.acc);
 
     // add vel to pos
     this.x += this.vel.x;
@@ -1231,7 +1299,9 @@ export class Vector {
   limit(max) {
     if (this.getLen() > max) {
       this.normalize();
-      this.mul(max);
+      this.mul(max, max);
+
+      return this;
     } else if (max === undefined) {
       console.log("No max value provided.");
     }
@@ -1612,6 +1682,12 @@ export function drawTextOnMap(text, x, y, game) {
   game.ctx.font = "10px Arial";
   game.ctx.fillStyle = "black";
   game.ctx.fillText(text, x - game.camera.x, y - game.camera.y);
+}
+
+export function drawText(text, x, y, game) {
+  game.ctx.font = "10px Arial";
+  game.ctx.fillStyle = "black";
+  game.ctx.fillText(text, x, y);
 }
 
 export function drawRect(

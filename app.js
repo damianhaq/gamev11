@@ -1,6 +1,7 @@
 import {
   Character,
   drawLineOnMap,
+  drawText,
   Game,
   Projectile,
   Sprite,
@@ -50,6 +51,8 @@ game.draw = function (deltaTime) {
   game.clearRect();
   map.drawLayer("grass");
   player.draw(deltaTime);
+  drawText(`player velocity: ${player.vel.x}`, 10, 40, game);
+  drawText(`player acceleration: ${player.acc.x}`, 10, 50, game);
 
   projectiles.forEach((el) => {
     el.draw(deltaTime);
