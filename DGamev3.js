@@ -538,7 +538,7 @@ export class Character extends Sprite {
     this.y = y;
     this.vel = new Vector(0, 0);
     this.acc = new Vector(0, 0);
-    this.accSpeed = 0.02;
+    this.accSpeed = 0.1;
     this.moveSpeed = 1;
 
     this.controllsType = null; // "WSAD", "MOUSE"
@@ -609,6 +609,9 @@ export class Character extends Sprite {
         }
       }
     } else if (this.controllsType === "MOUSE") {
+      // poruszanie sie za pomocą kliknięcia używając przyśpieszenia jest troche problematyczne ponieważ postać nie zwalnia gdy jest blisko celu i przez to nie zdąży wychamować.
+      // chyba lepiej używać zwygłego poruszania się na bazie velocity.
+
       // set destination point to mouse position
       if (this.game.mouse.isMouseDown) {
         // creating this.destinationPoint
@@ -620,24 +623,37 @@ export class Character extends Sprite {
 
       // move to destination point
       if (this.destinationPoint) {
+        // ------- METODA 1 (PRZYSPIESZENIE) -------
+        // get direction
+        // const directionAngle = this.destinationPoint
+        //   .clone()
+        //   .sub({ x: this.x, y: this.y })
+        //   .mul(-1, -1)
+        //   .getAngleDeg();
+
+        // const tempAcc = new Vector(1, 1);
+        // tempAcc.setAngleDeg(directionAngle);
+        // tempAcc.setMag(this.accSpeed);
+
+        // this.acc = tempAcc;
+
+        // ------- METODA 2 (PRĘDKOŚĆ) -------
+        // creating vector from current position to destination point,
+        // normalize it and multiply it by moveSpeed
+        const tempVel = this.destinationPoint
+          .clone()
+          .sub({ x: this.x, y: this.y })
+          .normalize();
+        tempVel.mul(this.moveSpeed, this.moveSpeed);
+
         // calculate range to destination point without mutating destination point
         const rangeToDestinationPoint = this.destinationPoint
           .clone()
           .sub({ x: this.x, y: this.y })
           .getLen();
-        // console.log(rangeToDestinationPoint);
-
-        let tempVel = new Vector(0, 0);
-
-        tempVel.x = this.destinationPoint.x - this.x;
-        tempVel.y = this.destinationPoint.y - this.y;
-
-        tempVel.normalize();
-
-        tempVel.mul(0.5, 0.5);
 
         if (rangeToDestinationPoint < 1) {
-          tempVel = new Vector(0, 0);
+          tempVel.set(0, 0);
           this.destinationPoint = null;
         }
         this.vel = tempVel;
@@ -646,6 +662,9 @@ export class Character extends Sprite {
 
     // add acc to vel
     this.vel.add(this.acc);
+
+    // limit vel
+    this.vel.limit(this.moveSpeed);
 
     // add vel to pos
     this.x += this.vel.x;

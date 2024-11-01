@@ -23,8 +23,8 @@ flameImg.src = "assets/579.png";
 const map = new Tiled(game, "./gamev11map.json", bigSpritev7);
 
 const player = new Character(0, 0, 16, 22, game);
-player.enableWSADMove();
-// player.enableMOUSEMove();
+// player.enableWSADMove();
+player.enableMOUSEMove();
 
 player.addAnim("stand", 0, 10, 16, 22, 4, bigSpritev7);
 player.addAnim("run", 64, 10, 16, 22, 4, bigSpritev7);
@@ -51,8 +51,8 @@ game.draw = function (deltaTime) {
   game.clearRect();
   map.drawLayer("grass");
   player.draw(deltaTime);
-  drawText(`player velocity: ${player.vel.x}`, 10, 40, game);
-  drawText(`player acceleration: ${player.acc.x}`, 10, 50, game);
+  drawText(`player velocity x: ${player.vel.x}`, 10, 40, game);
+  drawText(`player acceleration x: ${player.acc.x}`, 10, 50, game);
 
   projectiles.forEach((el) => {
     el.draw(deltaTime);
