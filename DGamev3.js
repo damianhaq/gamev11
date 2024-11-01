@@ -541,7 +541,7 @@ export class Character extends Sprite {
     this.accSpeed = 0.1;
     this.moveSpeed = 1;
 
-    this.controllsType = null; // "WSAD", "MOUSE"
+    this.controllsType = null; // "WSAD", "LMB", "RMB"
 
     this.collisionWithSprites = [];
     this.isCollisionWithCollidableTiles = false;
@@ -591,8 +591,10 @@ export class Character extends Sprite {
         // slow down
         if (this.vel.x > 0) {
           this.vel.x = +(this.vel.x - this.accSpeed).toFixed(2);
+          if (this.vel.x < 0.01) this.vel.x = 0; // cut slowing down when he is really slow
         } else if (this.vel.x < 0) {
           this.vel.x = +(this.vel.x + this.accSpeed).toFixed(2);
+          if (this.vel.x > 0.01) this.vel.x = 0; // cut slowing down when he is really slow
         }
       }
       if (this.game.keys.key[87]) {
@@ -604,16 +606,25 @@ export class Character extends Sprite {
 
         if (this.vel.y > 0) {
           this.vel.y = +(this.vel.y - this.accSpeed).toFixed(2);
+          if (this.vel.y < 0.01) this.vel.y = 0; // cut slowing down when he is really slow
         } else if (this.vel.y < 0) {
           this.vel.y = +(this.vel.y + this.accSpeed).toFixed(2);
+          if (this.vel.y > 0.01) this.vel.y = 0; // cut slowing down when he is really slow
         }
       }
-    } else if (this.controllsType === "MOUSE") {
+    } else if (this.controllsType === "LMB" || this.controllsType === "RMB") {
       // poruszanie sie za pomocą kliknięcia używając przyśpieszenia jest troche problematyczne ponieważ postać nie zwalnia gdy jest blisko celu i przez to nie zdąży wychamować.
       // chyba lepiej używać zwygłego poruszania się na bazie velocity.
 
-      // set destination point to mouse position
-      if (this.game.mouse.isMouseDown) {
+      //clock happens here
+      const click = this.controllsType === "LMB" ? "LMB" : "RMB";
+
+      // set destination point to mouse position depending on click type
+      if (
+        this.controllsType === "LMB"
+          ? this.game.mouse.isMouseDown
+          : this.game.mouse.RMB
+      ) {
         // creating this.destinationPoint
         this.destinationPoint = new Vector(
           this.game.mouse.x + this.game.camera.x,
@@ -730,8 +741,14 @@ export class Character extends Sprite {
     this.controllsType = "WSAD";
   }
 
-  enableMOUSEMove() {
-    this.controllsType = "MOUSE";
+  enableMOUSEMove(LMBorRMB) {
+    // check only "LMB" or "RMB"
+    if (LMBorRMB !== "LMB" && LMBorRMB !== "RMB") {
+      console.log("ERROR: LMBorRMB should be 'LMB' or 'RMB'");
+      return;
+    }
+
+    this.controllsType = LMBorRMB;
   }
 
   moveToPointWIP(x, y) {
