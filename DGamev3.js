@@ -4,6 +4,7 @@
 // - camera position now is rounded to 1 decimal
 // - game loop is now inside the game class and you can use the draw and update method externally like this: game.update = function (deltaTime) { ... }
 // - originInCenter variable in Sprite class
+// - WSAD movement base on a acceleration and mouse movement on a velocity
 
 // CLASSESS
 

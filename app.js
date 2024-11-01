@@ -95,24 +95,4 @@ game.onClickLMB = function () {
   console.log(projectiles);
 };
 
-game.onMouseMove = function () {
-  // // console.log("testmouse move");
-  // // cerate vector from player to mouse position
-  // const mouseVector = new Vector(
-  //   Math.round(game.mouse.x + game.camera.x - player.x),
-  //   Math.round(game.mouse.y + game.camera.y - player.y)
-  // );
-  // // normalize and multiply by 0.5
-  // mouseVector.normalize();
-  // mouseVector.mul(0.5, 0.5);
-  // const projectile = new Projectile(
-  //   mouseVector.x + player.x,
-  //   mouseVector.y + player.y,
-  //   16,
-  //   22,
-  //   game,
-  //   mouseVector.x,
-  //   mouseVector.y
-  // );
-  // projectile.addAnim("stand", 0, 10, 16, 22, 4, bigSpritev7);
-};
+game.onMouseMove = function () {};
