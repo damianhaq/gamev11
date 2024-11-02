@@ -1280,10 +1280,9 @@ export class Tiled {
             tileset.tileheight
           );
         }
+        // count how many times draw tile
+        counter++;
       }
-
-      // count how many times draw tile
-      counter++;
     }
 
     return counter;
