@@ -47,14 +47,17 @@ game.update = function (deltaTime) {
 
 game.draw = function (deltaTime) {
   game.clearRect();
-  map.drawLayer("ground");
-  map.drawLayer("leafs and flowers");
-  // map.drawWorldBorders();
+  const groundCounter = map.drawLayer("ground", player.x, player.y);
+  const leafsCounter = map.drawLayer("leafs and flowers", player.x, player.y);
+  const roads = map.drawLayer("roads", player.x, player.y);
   player.draw(deltaTime);
   drawText(`player velocity x: ${player.vel.x}`, 10, 40, game);
   drawText(`player acceleration x: ${player.acc.x}`, 10, 50, game);
   drawText(`controlls type: ${player.controllsType}`, 10, 30, game);
   drawText(`player position x: ${player.x} y: ${player.y}`, 10, 20, game);
+  drawText(`ground tiles: ${groundCounter}`, 10, 60, game);
+  drawText(`leaf tiles: ${leafsCounter}`, 10, 70, game);
+  drawText(`roads tiles: ${roads}`, 10, 80, game);
 
   projectiles.forEach((el) => {
     el.draw(deltaTime);

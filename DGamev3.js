@@ -6,6 +6,7 @@
 // - originInCenter variable in Sprite class
 // - WSAD movement base on a acceleration and mouse movement on a velocity
 // - now we can draw tile "with border" to prevent showing strange grid lines
+// - draw only chunks that player is in and chunks around it (never more than 9), not all chunks
 
 // CLASSESS
 
@@ -1133,6 +1134,93 @@ export class Tiled {
     return { x: column * tilesetsTileWidth, y: row * tilkesetsTileHeight };
   }
 
+  drawLayer(layerName, playerX, playerY) {
+    // check if jsonData is loaded
+    if (this.jsonData === null) {
+      console.warn("json file is no loaded yet, skipping drawLayer");
+      return;
+    }
+
+    // check if layer exists
+    if (
+      this.jsonData.layers.filter((el) => el.name === layerName).length === 0
+    ) {
+      console.warn("layer ", layerName, "not found, skipping drawLayer");
+      return;
+    }
+
+    // find layer
+    const layer = this.jsonData.layers.filter((el) => el.name === layerName)[0];
+
+    let counter = 0;
+    for (let i = 0; i < layer.chunks.length; i++) {
+      // draw only chunk that player is in and chunks around it
+      if (
+        this.#isSomethingIsInChunk(layer.chunks[i], playerX, playerY) ||
+        this.#isSomethingIsInChunk(
+          layer.chunks[i],
+          playerX - 16 * 16,
+          playerY
+        ) ||
+        this.#isSomethingIsInChunk(
+          layer.chunks[i],
+          playerX + 16 * 16,
+          playerY
+        ) ||
+        this.#isSomethingIsInChunk(
+          layer.chunks[i],
+          playerX,
+          playerY - 16 * 16
+        ) ||
+        this.#isSomethingIsInChunk(
+          layer.chunks[i],
+          playerX,
+          playerY + 16 * 16
+        ) ||
+        this.#isSomethingIsInChunk(
+          layer.chunks[i],
+          playerX - 16 * 16,
+          playerY - 16 * 16
+        ) ||
+        this.#isSomethingIsInChunk(
+          layer.chunks[i],
+          playerX + 16 * 16,
+          playerY - 16 * 16
+        ) ||
+        this.#isSomethingIsInChunk(
+          layer.chunks[i],
+          playerX - 16 * 16,
+          playerY + 16 * 16
+        ) ||
+        this.#isSomethingIsInChunk(
+          layer.chunks[i],
+          playerX + 16 * 16,
+          playerY + 16 * 16
+        )
+      ) {
+        let tilesCounter = this.#drawChunk(
+          layer.chunks[i],
+          this.jsonData.tilesets[0],
+          this.image
+        );
+        counter += tilesCounter;
+      }
+    }
+    return counter;
+  }
+
+  #isSomethingIsInChunk(chunk, smtngX, smtngY) {
+    // check if smtng is in chunk
+    if (
+      smtngX >= chunk.x * 16 &&
+      smtngX <= chunk.x * 16 + chunk.width * 16 &&
+      smtngY >= chunk.y * 16 &&
+      smtngY <= chunk.y * 16 + chunk.height * 16
+    ) {
+      return true;
+    }
+  }
+
   #drawChunk(chunk, tileset) {
     // this function draw chunk in correct position => chunk.x and chunk.y,
     // so you dont have to specify where to draw this
@@ -1141,6 +1229,8 @@ export class Tiled {
     // chunk position
     const chunkX = chunk.x * tileset.tilewidth;
     const chunkY = chunk.y * tileset.tileheight;
+
+    let counter = 0;
 
     for (let i = 0; i < chunk.data.length; i++) {
       const row = Math.floor(i / chunk.width);
@@ -1190,53 +1280,13 @@ export class Tiled {
             tileset.tileheight
           );
         }
-
-        // drawImagePartWithTransform(
-        //   this.image,
-        //   tilePos.x,
-        //   tilePos.y,
-        //   tileset.tilewidth,
-        //   tileset.tileheight,
-        //   0 + chunkX + column * tileset.tilewidth,
-        //   0 + chunkY + row * tileset.tileheight,
-        //   tileset.tilewidth,
-        //   tileset.tileheight,
-        //   false,
-        //   false,
-        //   0,
-        //   0,
-        //   0,
-        //   this.game.ctx,
-        //   this.game.camera.x,
-        //   this.game.camera.y,
-        //   this.game.isDebug
-        // );
       }
-    }
-  }
 
-  drawLayer(layerName) {
-    // check if jsonData is loaded
-    if (this.jsonData === null) {
-      console.warn("json file is no loaded yet, skipping drawLayer");
-      return;
+      // count how many times draw tile
+      counter++;
     }
 
-    // check if layer exists
-    if (
-      this.jsonData.layers.filter((el) => el.name === layerName).length === 0
-    ) {
-      console.warn("layer ", layerName, "not found, skipping drawLayer");
-      return;
-    }
-
-    const layer = this.jsonData.layers.filter((el) => el.name === layerName)[0];
-
-    for (let i = 0; i < layer.chunks.length; i++) {
-      this.#drawChunk(layer.chunks[i], this.jsonData.tilesets[0], this.image);
-    }
-
-    // this.#drawWorldBorders();
+    return counter;
   }
 
   drawWorldBorders() {
