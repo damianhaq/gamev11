@@ -1,10 +1,8 @@
 import {
   Character,
-  drawLineOnMap,
   drawText,
   Game,
   Projectile,
-  Sprite,
   Tiled,
   Vector,
 } from "./DGamev3.js";
@@ -49,11 +47,14 @@ game.update = function (deltaTime) {
 
 game.draw = function (deltaTime) {
   game.clearRect();
-  map.drawLayer("grass");
+  map.drawLayer("ground");
+  map.drawLayer("leafs and flowers");
+  // map.drawWorldBorders();
   player.draw(deltaTime);
   drawText(`player velocity x: ${player.vel.x}`, 10, 40, game);
   drawText(`player acceleration x: ${player.acc.x}`, 10, 50, game);
   drawText(`controlls type: ${player.controllsType}`, 10, 30, game);
+  drawText(`player position x: ${player.x} y: ${player.y}`, 10, 20, game);
 
   projectiles.forEach((el) => {
     el.draw(deltaTime);

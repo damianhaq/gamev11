@@ -5,6 +5,7 @@
 // - game loop is now inside the game class and you can use the draw and update method externally like this: game.update = function (deltaTime) { ... }
 // - originInCenter variable in Sprite class
 // - WSAD movement base on a acceleration and mouse movement on a velocity
+// - now we can draw tile "with border" to prevent showing strange grid lines
 
 // CLASSESS
 
@@ -915,6 +916,7 @@ export class Tiled {
   constructor(game, jsonFilePath, image) {
     this.game = game;
     this.jsonData = null;
+    this.tilesWithBorders = [];
     this.image = image;
 
     this.mapSize = null;
@@ -938,9 +940,33 @@ export class Tiled {
       const json = await response.json();
 
       this.jsonData = json;
+      console.log(`TILED: JSON file loaded:`, this.jsonData);
+      this.mapSize = this.getMapSize();
+
+      this.tilesWithBorders = this.#getTilesWithBorders(json.tilesets[0]);
     } catch (error) {
       console.error(`Error loading JSON file: ${error}`);
     }
+  }
+
+  #getTilesWithBorders(tileset) {
+    // find tiles with properties "border"
+    const borderTiles = [];
+    tileset.tiles.forEach((tile) => {
+      // check if tile have object properties
+      if (tile.properties) {
+        tile.properties.forEach((property) => {
+          if (property.name === "border" && property.value === true) {
+            // add id to array
+            borderTiles.push(tile.id);
+          }
+        });
+      }
+    });
+
+    console.log(`TILED: Tiles with borders:`, borderTiles);
+
+    return borderTiles;
   }
 
   // // DISABLED
@@ -950,21 +976,21 @@ export class Tiled {
   // }
 
   // DISABLED
-  getWorldBounds() {
-    // check if mapSize is null
-    if (this.mapSize === null) {
-      console.warn(
-        "Map size is null. Please set it before getting world bounds."
-      );
-      return { x: null, y: null, width: null, height: null };
-    }
-    return {
-      x: 0,
-      y: 0,
-      width: this.mapSize.width,
-      height: this.mapSize.height,
-    };
-  }
+  // getWorldBounds() {
+  //   // check if mapSize is null
+  //   if (this.mapSize === null) {
+  //     console.warn(
+  //       "Map size is null. Please set it before getting world bounds."
+  //     );
+  //     return { x: null, y: null, width: null, height: null };
+  //   }
+  //   return {
+  //     x: 0,
+  //     y: 0,
+  //     width: this.mapSize.width,
+  //     height: this.mapSize.height,
+  //   };
+  // }
 
   // DISABLED
   /**
@@ -976,44 +1002,44 @@ export class Tiled {
    * @param {number} height - The height of the object.
    * @return {boolean} Whether the object is fully inside the map boundaries.
    */
-  isInside(x, y, width, height) {
-    const worldBounds = this.getWorldBounds();
-    // chceck if getWorldBounds return null and console.warn
-    if (worldBounds.x === null) {
-      console.warn(
-        "Map size is null. Please set it before checking if object is inside."
-      );
-      return false;
-    }
+  // isInside(x, y, width, height) {
+  //   const worldBounds = this.getWorldBounds();
+  //   // chceck if getWorldBounds return null and console.warn
+  //   if (worldBounds.x === null) {
+  //     console.warn(
+  //       "Map size is null. Please set it before checking if object is inside."
+  //     );
+  //     return false;
+  //   }
 
-    return (
-      x >= worldBounds.x &&
-      x + width <= worldBounds.x + worldBounds.width &&
-      y >= worldBounds.y &&
-      y + height <= worldBounds.y + worldBounds.height
-    );
-  }
+  //   return (
+  //     x >= worldBounds.x &&
+  //     x + width <= worldBounds.x + worldBounds.width &&
+  //     y >= worldBounds.y &&
+  //     y + height <= worldBounds.y + worldBounds.height
+  //   );
+  // }
 
-  addLayerToCollidable(layerName) {
-    // check if jsonData is loaded
-    if (this.jsonData === null) return;
+  // addLayerToCollidable(layerName) {
+  //   // check if jsonData is loaded
+  //   if (this.jsonData === null) return;
 
-    const layer = this.jsonData.layers.filter((el) => el.name === layerName)[0];
+  //   const layer = this.jsonData.layers.filter((el) => el.name === layerName)[0];
 
-    layer.chunks.forEach((chunk) => {
-      chunk.data.forEach((el, index) => {
-        if (el !== 0) {
-          const pos = this.get2dPosFrom1dArray(index, 16);
-          this.collidable.push({
-            x: pos.x * 16 + chunk.x * 16,
-            y: pos.y * 16 + chunk.y * 16,
-            width: 16,
-            height: 16,
-          });
-        }
-      });
-    });
-  }
+  //   layer.chunks.forEach((chunk) => {
+  //     chunk.data.forEach((el, index) => {
+  //       if (el !== 0) {
+  //         const pos = this.get2dPosFrom1dArray(index, 16);
+  //         this.collidable.push({
+  //           x: pos.x * 16 + chunk.x * 16,
+  //           y: pos.y * 16 + chunk.y * 16,
+  //           width: 16,
+  //           height: 16,
+  //         });
+  //       }
+  //     });
+  //   });
+  // }
 
   //DISABLED
   // drawDebug() {
@@ -1061,44 +1087,37 @@ export class Tiled {
   //   this.highlight = tiles;
   // }
 
-  // DISABLED
-  // getMapSize() {
-  //   // Pobiera rozmiar mapy na podstawie ostatniego chunka w każdym warstwie.
-  //   let width = 0;
-  //   let height = 0;
+  getMapSize() {
+    // Pobiera rozmiar mapy na podstawie ostatniego chunka w każdej warstwie.
+    let width = 0;
+    let height = 0;
+    let startX = 0;
+    let startY = 0;
 
-  //   this.jsonData.layers.forEach((layer) => {
-  //     // sprawdza ostatni chunk w każdej warstwie i ten najwiekszy zapisuje
+    const tileHeight = this.jsonData.tileheight;
+    const tileWidth = this.jsonData.tilewidth;
 
-  //     const lastChunk = layer.chunks[layer.chunks.length - 1];
+    this.jsonData.layers.forEach((layer) => {
+      width = Math.max(width, layer.width);
+      height = Math.max(height, layer.height);
+      startX = Math.min(startX, layer.startx);
+      startY = Math.min(startY, layer.starty);
+    });
 
-  //     // sprawdzamy, czy rozmiar mapy musi zostać zaktualizowany
-  //     // największa wartość x koordynaty ostatniego chunka w warstwie + szerokość tego chunka
-  //     // jest większa niż aktualny rozmiar mapy w osi x
-  //     if (
-  //       lastChunk.x * this.jsonData.tilewidth +
-  //         lastChunk.width * this.jsonData.tilewidth >
-  //       width
-  //     ) {
-  //       width =
-  //         lastChunk.x * this.jsonData.tilewidth +
-  //         lastChunk.width * this.jsonData.tilewidth;
-  //     }
-  //     // największa wartość y koordynaty ostatniego chunka w warstwie + wysokość tego chunka
-  //     // jest większa niż aktualny rozmiar mapy w osi y
-  //     if (
-  //       lastChunk.y * this.jsonData.tileheight +
-  //         lastChunk.height * this.jsonData.tileheight >
-  //       height
-  //     ) {
-  //       height =
-  //         lastChunk.y * this.jsonData.tileheight +
-  //         lastChunk.height * this.jsonData.tileheight;
-  //     }
-  //   });
+    const mapSize = {
+      dimensionsTiles: { width, height },
+      bordersPositions: {
+        top: startY * tileHeight,
+        left: startX * tileWidth,
+        right: (startX + width) * tileWidth,
+        bottom: (startY + height) * tileHeight,
+      },
+    };
 
-  //   return { width, height };
-  // }
+    console.log(`Map size: `, mapSize);
+
+    return mapSize;
+  }
 
   getTilePosFromSpritesheet(
     id,
@@ -1114,25 +1133,7 @@ export class Tiled {
     return { x: column * tilesetsTileWidth, y: row * tilkesetsTileHeight };
   }
 
-  /**
-   * @description
-   *   Generates 2D position from 1D array index.
-   *
-   * @param {number} index
-   *   1D array index.
-   * @param {number} columns
-   *   Number of columns in 2D array.
-   *
-   * @returns {{x: number, y: number}}
-   *   2D position.
-   */
-  get2dPosFrom1dArray(index, columns) {
-    const x = index % columns;
-    const y = Math.floor(index / columns);
-    return { x, y };
-  }
-
-  drawChunk(chunk, tileset) {
+  #drawChunk(chunk, tileset) {
     // this function draw chunk in correct position => chunk.x and chunk.y,
     // so you dont have to specify where to draw this
 
@@ -1153,26 +1154,63 @@ export class Tiled {
           tileset.tileheight
         );
 
-        drawImagePartWithTransform(
-          this.image,
-          tilePos.x,
-          tilePos.y,
-          tileset.tilewidth,
-          tileset.tileheight,
-          0 + chunkX + column * tileset.tilewidth,
-          0 + chunkY + row * tileset.tileheight,
-          tileset.tilewidth,
-          tileset.tileheight,
-          false,
-          false,
-          0,
-          0,
-          0,
-          this.game.ctx,
-          this.game.camera.x,
-          this.game.camera.y,
-          this.game.isDebug
-        );
+        const borderWidth = 3;
+        // check if tile have properties
+        const id = chunk.data[i];
+        if (this.tilesWithBorders.includes(id)) {
+          // draw this tile bigger
+          this.game.ctx.drawImage(
+            this.image,
+            tilePos.x - borderWidth,
+            tilePos.y - borderWidth,
+            tileset.tilewidth + borderWidth * 2,
+            tileset.tileheight + borderWidth * 2,
+            chunkX +
+              column * tileset.tilewidth -
+              this.game.camera.x -
+              borderWidth,
+            chunkY +
+              row * tileset.tileheight -
+              this.game.camera.y -
+              borderWidth,
+            tileset.tilewidth + borderWidth * 2,
+            tileset.tileheight + borderWidth * 2
+          );
+        } else {
+          // draw this tile normal
+          this.game.ctx.drawImage(
+            this.image,
+            tilePos.x,
+            tilePos.y,
+            tileset.tilewidth,
+            tileset.tileheight,
+            chunkX + column * tileset.tilewidth - this.game.camera.x,
+            chunkY + row * tileset.tileheight - this.game.camera.y,
+            tileset.tilewidth,
+            tileset.tileheight
+          );
+        }
+
+        // drawImagePartWithTransform(
+        //   this.image,
+        //   tilePos.x,
+        //   tilePos.y,
+        //   tileset.tilewidth,
+        //   tileset.tileheight,
+        //   0 + chunkX + column * tileset.tilewidth,
+        //   0 + chunkY + row * tileset.tileheight,
+        //   tileset.tilewidth,
+        //   tileset.tileheight,
+        //   false,
+        //   false,
+        //   0,
+        //   0,
+        //   0,
+        //   this.game.ctx,
+        //   this.game.camera.x,
+        //   this.game.camera.y,
+        //   this.game.isDebug
+        // );
       }
     }
   }
@@ -1184,30 +1222,59 @@ export class Tiled {
       return;
     }
 
+    // check if layer exists
+    if (
+      this.jsonData.layers.filter((el) => el.name === layerName).length === 0
+    ) {
+      console.warn("layer ", layerName, "not found, skipping drawLayer");
+      return;
+    }
+
     const layer = this.jsonData.layers.filter((el) => el.name === layerName)[0];
 
     for (let i = 0; i < layer.chunks.length; i++) {
-      this.drawChunk(layer.chunks[i], this.jsonData.tilesets[0], this.image);
+      this.#drawChunk(layer.chunks[i], this.jsonData.tilesets[0], this.image);
     }
+
+    // this.#drawWorldBorders();
   }
 
-  getChunkIndex(myX, myY, layerIndex, jsonData) {
-    const tileX = Math.floor(myX / 16);
-    const tileY = Math.floor(myY / 16);
+  drawWorldBorders() {
+    // skip drawing until json is loaded
+    if (this.jsonData === null) {
+      console.warn("json file is no loaded yet, skipping drawWorldBorders");
+      return;
+    }
 
-    // TODO: on przeszukuje pierwszy layer, jeśli był by mniejszy (nie wiem czy to możliwe) to zwróci błędny chunk
-    // TODO: 16 jest hardcoded a nie powinno
-    const index = jsonData.layers[layerIndex].chunks.findIndex(
-      (el) =>
-        tileX >= el.x &&
-        tileX <= el.x + el.width &&
-        tileY >= el.y &&
-        tileY <= el.y + el.height
+    drawRectOnMap(
+      this.mapSize.bordersPositions.left,
+      this.mapSize.bordersPositions.top,
+      this.mapSize.dimensionsTiles.width * 16,
+      this.mapSize.dimensionsTiles.height * 16,
+      this.game.ctx,
+      this.game.camera,
+      "red",
+      5
     );
-
-    return index;
-    // console.log(index);
   }
+
+  // getChunkIndex(myX, myY, layerIndex, jsonData) {
+  //   const tileX = Math.floor(myX / 16);
+  //   const tileY = Math.floor(myY / 16);
+
+  //   // TODO: on przeszukuje pierwszy layer, jeśli był by mniejszy (nie wiem czy to możliwe) to zwróci błędny chunk
+  //   // TODO: 16 jest hardcoded a nie powinno
+  //   const index = jsonData.layers[layerIndex].chunks.findIndex(
+  //     (el) =>
+  //       tileX >= el.x &&
+  //       tileX <= el.x + el.width &&
+  //       tileY >= el.y &&
+  //       tileY <= el.y + el.height
+  //   );
+
+  //   return index;
+  //   // console.log(index);
+  // }
 }
 
 // Vector
@@ -1524,7 +1591,7 @@ export function drawImagePartWithTransform(
 
   // Rysuj punkt obrotu
   if (isDebug) {
-    ctx.strokeStyle = "grey";
+    ctx.strokeStyle = "red";
     ctx.beginPath();
     ctx.arc(
       rotationOriginX + dx + sWidth / 2,
@@ -1553,9 +1620,26 @@ export function drawRectOnMap(
   color = "black",
   lineWidth = 1
 ) {
-  // console.log(
-  //   `Drawing rect on map: x=${x}, y=${y}, width=${width}, height=${height}, camera=${camera}`
-  // );
+  // Hard type checks and NaN checks for all parameters
+  if (
+    typeof x !== "number" ||
+    isNaN(x) ||
+    typeof y !== "number" ||
+    isNaN(y) ||
+    typeof width !== "number" ||
+    isNaN(width) ||
+    typeof height !== "number" ||
+    isNaN(height) ||
+    typeof ctx !== "object" ||
+    typeof camera !== "object" ||
+    typeof color !== "string" ||
+    typeof lineWidth !== "number" ||
+    isNaN(lineWidth)
+  ) {
+    console.error("drawRectOnMap: Invalid argument(s).");
+    return;
+  }
+
   ctx.lineWidth = lineWidth;
   ctx.strokeStyle = color;
   ctx.beginPath();
@@ -1709,4 +1793,22 @@ export function drawRect(
     game.ctx.stroke();
   }
   game.ctx.closePath();
+}
+
+/**
+ * @description
+ *   Generates 2D position from 1D array index.
+ *
+ * @param {number} index
+ *   1D array index.
+ * @param {number} columns
+ *   Number of columns in 2D array.
+ *
+ * @returns {{x: number, y: number}}
+ *   2D position.
+ */
+export function get2dPosFrom1dArray(index, columns) {
+  const x = index % columns;
+  const y = Math.floor(index / columns);
+  return { x, y };
 }
