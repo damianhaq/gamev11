@@ -206,6 +206,7 @@ export class Sprite {
     this.isOriginInCenter = false;
 
     this.animName = "unset";
+    this.killAfterFirstAnim = false;
 
     this.viewType = "unset"; // unset, texture, anim
   }
@@ -465,43 +466,57 @@ export class Sprite {
         true
       );
     } else if (this.viewType === "anim") {
-      // animation logic
+      // Update the current frame time with delta time
       this.anim[this.animName].currFrameTime += deltaTime;
+
+      // Check if it's time to switch to the next frame
       if (
         this.anim[this.animName].currFrameTime >=
         this.anim[this.animName].frameTime
       ) {
+        // Subtract the frame time from the current frame time
         this.anim[this.animName].currFrameTime -=
           this.anim[this.animName].frameTime;
+
+        // Update the current frame, loop back to the first frame if at the last frame
         this.anim[this.animName].currFrame =
           (this.anim[this.animName].currFrame + 1) %
           this.anim[this.animName].frames;
+
+        // Call a function to stop play when first animation is done
+        if (this.anim[this.animName].currFrame === 0) {
+          // this.#killAfterFirstAnimation();
+          if (this.killAfterFirstAnim) {
+            this.#killAfterFirstAnimation();
+          }
+        }
       }
 
-      drawImagePartWithTransform(
-        this.anim[this.animName].image,
-        this.anim[this.animName].fromX +
-          this.anim[this.animName].fromWidth *
-            this.anim[this.animName].currFrame,
-        this.anim[this.animName].fromY,
-        this.anim[this.animName].fromWidth,
-        this.anim[this.animName].fromHeight,
-        (this.isOriginInCenter ? this.x - this.width / 2 : this.x) -
-          this.game.camera.x,
-        (this.isOriginInCenter ? this.y - this.height / 2 : this.y) -
-          this.game.camera.y,
-        this.anim[this.animName].fromWidth,
-        this.anim[this.animName].fromHeight,
-        this.isFlipX,
-        this.isFlipY,
-        this.anim[this.animName].rotateDeg,
-        this.anim[this.animName].rotatePointX,
-        this.anim[this.animName].rotatePointY,
-        this.game.ctx,
-        0,
-        0,
-        this.game.isDebug
-      );
+      if (this.viewType === "anim")
+        drawImagePartWithTransform(
+          this.anim[this.animName].image,
+          this.anim[this.animName].fromX +
+            this.anim[this.animName].fromWidth *
+              this.anim[this.animName].currFrame,
+          this.anim[this.animName].fromY,
+          this.anim[this.animName].fromWidth,
+          this.anim[this.animName].fromHeight,
+          (this.isOriginInCenter ? this.x - this.width / 2 : this.x) -
+            this.game.camera.x,
+          (this.isOriginInCenter ? this.y - this.height / 2 : this.y) -
+            this.game.camera.y,
+          this.anim[this.animName].fromWidth,
+          this.anim[this.animName].fromHeight,
+          this.isFlipX,
+          this.isFlipY,
+          this.anim[this.animName].rotateDeg,
+          this.anim[this.animName].rotatePointX,
+          this.anim[this.animName].rotatePointY,
+          this.game.ctx,
+          0,
+          0,
+          this.game.isDebug
+        );
     }
     // hitbox
     if (this.game.isDebug) {
@@ -515,8 +530,14 @@ export class Sprite {
       );
     }
   }
-}
 
+  #killAfterFirstAnimation() {
+    console.log("First animation is done.");
+    this.viewType = "unset";
+    this.anim = null;
+    this.animName = "unset";
+  }
+}
 export class Projectile extends Sprite {
   constructor(x, y, width, height, game, velX, velY) {
     super(x, y, width, height, game);

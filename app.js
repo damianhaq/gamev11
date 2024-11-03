@@ -3,6 +3,7 @@ import {
   drawText,
   Game,
   Projectile,
+  Sprite,
   Tiled,
   Vector,
 } from "./DGamev3.js";
@@ -18,6 +19,9 @@ bigSpritev7.src = "assets/BigSpritev7.png";
 const flameImg = new Image();
 flameImg.src = "assets/579.png";
 
+const flameOnGroundImg = new Image();
+flameOnGroundImg.src = "assets/70.png";
+
 const map = new Tiled(game, "./gamev11map.json", bigSpritev7);
 
 const player = new Character(0, 0, 16, 22, game);
@@ -32,6 +36,7 @@ player.isOriginInCenter = true;
 console.log("player", player);
 
 const projectiles = [];
+const sprites = [];
 
 game.update = function (deltaTime) {
   player.update(deltaTime);
@@ -60,6 +65,10 @@ game.draw = function (deltaTime) {
   drawText(`roads tiles: ${roads}`, 10, 80, game);
 
   projectiles.forEach((el) => {
+    el.draw(deltaTime);
+  });
+
+  sprites.forEach((el) => {
     el.draw(deltaTime);
   });
 };
@@ -95,8 +104,15 @@ game.onClickLMB = function () {
   flame.anim.fly.rotateDeg = angle + 180;
   flame.isOriginInCenter = true;
 
+  const flameOnGround = new Sprite(player.x, player.y + 12, 64, 64, game);
+  flameOnGround.addAnim("burn", 0, 0, 64, 64, 9, flameOnGroundImg);
+  flameOnGround.anim.burn.frameTime = 50;
+  flameOnGround.isOriginInCenter = true;
+  flameOnGround.killAfterFirstAnim = true;
+
   projectiles.push(flame);
-  console.log(projectiles);
+  sprites.push(flameOnGround);
+  console.log("projectiles", projectiles, "sprites", sprites);
 };
 
 game.onMouseMove = function () {};
