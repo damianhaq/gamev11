@@ -13,6 +13,10 @@ const game = new Game();
 game.init("canvas", 1200, 1000, 3);
 game.isDebug = false;
 
+game.createGroup("projectiles");
+game.createGroup("effects");
+game.createGroup("player");
+
 const bigSpritev7 = new Image();
 bigSpritev7.src = "assets/BigSpritev7.png";
 
@@ -35,19 +39,11 @@ player.isOriginInCenter = true;
 
 console.log("player", player);
 
-const projectiles = [];
-const sprites = [];
+game.addToGroup("player", player);
 
 game.update = function (deltaTime) {
-  player.update(deltaTime);
   game.updateCamera(player.x, player.y);
   // game.moveCameraRMB();
-
-  projectiles.forEach((el) => {
-    el.update(deltaTime);
-  });
-
-  // console.log(game.mouse.cameraLastMousePosition);
 };
 
 game.draw = function (deltaTime) {
@@ -55,7 +51,7 @@ game.draw = function (deltaTime) {
   const groundCounter = map.drawLayer("ground", player.x, player.y);
   const leafsCounter = map.drawLayer("leafs and flowers", player.x, player.y);
   const roads = map.drawLayer("roads", player.x, player.y);
-  player.draw(deltaTime);
+
   drawText(`player velocity x: ${player.vel.x}`, 10, 40, game);
   drawText(`player acceleration x: ${player.acc.x}`, 10, 50, game);
   drawText(`controlls type: ${player.controllsType}`, 10, 30, game);
@@ -63,14 +59,6 @@ game.draw = function (deltaTime) {
   drawText(`ground tiles: ${groundCounter}`, 10, 60, game);
   drawText(`leaf tiles: ${leafsCounter}`, 10, 70, game);
   drawText(`roads tiles: ${roads}`, 10, 80, game);
-
-  projectiles.forEach((el) => {
-    el.draw(deltaTime);
-  });
-
-  sprites.forEach((el) => {
-    el.draw(deltaTime);
-  });
 };
 
 game.onClickLMB = function () {
@@ -110,9 +98,8 @@ game.onClickLMB = function () {
   flameOnGround.isOriginInCenter = true;
   flameOnGround.killAfterFirstAnim = true;
 
-  projectiles.push(flame);
-  sprites.push(flameOnGround);
-  console.log("projectiles", projectiles, "sprites", sprites);
+  game.addToGroup("projectiles", flame);
+  game.addToGroup("effects", flameOnGround);
 };
 
 game.onMouseMove = function () {};

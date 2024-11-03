@@ -1,12 +1,6 @@
-// version 3.1
-// - new way to load json file
-// - new way to setup movment in Character class
-// - camera position now is rounded to 1 decimal
-// - game loop is now inside the game class and you can use the draw and update method externally like this: game.update = function (deltaTime) { ... }
-// - originInCenter variable in Sprite class
-// - WSAD movement base on a acceleration and mouse movement on a velocity
-// - now we can draw tile "with border" to prevent showing strange grid lines
-// - draw only chunks that player is in and chunks around it (never more than 9), not all chunks
+// version 3.2
+// - in Sprite, Animation can delete itself after animation is done
+// - draw and update every sprite, that is added to some group, is done automatically in gameLoop in game class
 
 // CLASSESS
 
@@ -19,6 +13,8 @@ export class Game {
     this.isDebug = true;
     this.lastTime = 0;
     this.fpsCounter = 0;
+
+    this.groups = [];
 
     this.mouse = {
       clickFlag: false,
@@ -42,6 +38,37 @@ export class Game {
       y: 0,
     };
   }
+
+  createGroup(name) {
+    this.groups.push({ name, sprites: [] });
+    console.log(`Group ${name} created. Groups:`, this.groups);
+  }
+
+  addToGroup(groupName, sprite) {
+    // check if group exists
+    const group = this.groups.find((group) => group.name === groupName);
+    const index = this.groups.indexOf(group);
+
+    if (!group) {
+      console.error(`Group ${groupName} does not exist`);
+      return;
+    }
+
+    if (!(sprite instanceof Sprite)) {
+      console.error(
+        `Error while adding to group ${groupName}. Parameter must be an instance of Sprite class`
+      );
+      return;
+    }
+
+    this.groups[index].sprites.push(sprite);
+
+    console.log(
+      `Sprite ${sprite.constructor.name} added to group ${groupName}. Groups:`,
+      this.groups
+    );
+  }
+
   updateCamera(x, y) {
     this.camera.x = +(x - this.canvas.width / (2 * this.scaleFactor)).toFixed(
       1
@@ -149,6 +176,22 @@ export class Game {
 
     this.update(deltaTime);
     this.draw(deltaTime);
+
+    // --------- draw -----------
+    this.groups.forEach((group) => {
+      group.sprites.forEach((sprite) => {
+        sprite.draw(deltaTime);
+      });
+    });
+
+    // --------- update -----------
+
+    this.groups.forEach((group) => {
+      group.sprites.forEach((sprite) => {
+        // if update function exists
+        if (sprite.update) sprite.update(deltaTime);
+      });
+    });
 
     const skipFactor = 100;
     if (Math.floor(timestamp / 10) % skipFactor === 0) {
