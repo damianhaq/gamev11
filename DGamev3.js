@@ -959,7 +959,8 @@ export class Tiled {
         tile.properties.forEach((property) => {
           if (property.name === "border" && property.value === true) {
             // add id to array
-            borderTiles.push(tile.id);
+            // WARNING: +1 because Tiled make one digit difrence
+            borderTiles.push(tile.id + 1);
           }
         });
       }
@@ -1120,7 +1121,7 @@ export class Tiled {
     return mapSize;
   }
 
-  getTilePosFromSpritesheet(
+  #getTilePosFromSpritesheet(
     id,
     tilesetsColumns,
     tilesetsTileWidth,
@@ -1237,16 +1238,17 @@ export class Tiled {
       const column = i - row * chunk.width;
 
       if (chunk.data[i] !== 0) {
-        const tilePos = this.getTilePosFromSpritesheet(
+        const tilePos = this.#getTilePosFromSpritesheet(
           chunk.data[i],
           tileset.columns,
           tileset.tilewidth,
           tileset.tileheight
         );
 
-        const borderWidth = 3;
+        const borderWidth = 1;
         // check if tile have properties
         const id = chunk.data[i];
+
         if (this.tilesWithBorders.includes(id)) {
           // draw this tile bigger
           this.game.ctx.drawImage(
