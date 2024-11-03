@@ -1,6 +1,7 @@
 // version 3.2
 // - in Sprite, Animation can delete itself after animation is done
 // - draw and update every sprite, that is added to some group, is done automatically in gameLoop in game class
+// = sprite can kill itself from group when animation is done or when projectile past some distance
 
 // CLASSESS
 
@@ -62,11 +63,6 @@ export class Game {
     }
 
     this.groups[index].sprites.push(sprite);
-
-    console.log(
-      `Sprite ${sprite.constructor.name} added to group ${groupName}. Groups:`,
-      this.groups
-    );
   }
 
   updateCamera(x, y) {
@@ -178,18 +174,18 @@ export class Game {
     this.draw(deltaTime);
 
     // --------- draw -----------
-    this.groups.forEach((group) => {
-      group.sprites.forEach((sprite) => {
-        sprite.draw(deltaTime);
+    this.groups.forEach((group, groupIndex) => {
+      group.sprites.forEach((sprite, spriteIndex) => {
+        sprite.draw(deltaTime, groupIndex, spriteIndex);
       });
     });
 
     // --------- update -----------
 
-    this.groups.forEach((group) => {
-      group.sprites.forEach((sprite) => {
+    this.groups.forEach((group, groupIndex) => {
+      group.sprites.forEach((sprite, spriteIndex) => {
         // if update function exists
-        if (sprite.update) sprite.update(deltaTime);
+        if (sprite.update) sprite.update(deltaTime, groupIndex, spriteIndex);
       });
     });
 
@@ -486,7 +482,7 @@ export class Sprite {
     }
   }
 
-  draw(deltaTime) {
+  draw(deltaTime, groupIndex, spriteIndex) {
     if (this.viewType === "texture") {
       drawImagePartWithTransform(
         this.texture.image,
@@ -530,7 +526,7 @@ export class Sprite {
         if (this.anim[this.animName].currFrame === 0) {
           // this.#killAfterFirstAnimation();
           if (this.killAfterFirstAnim) {
-            this.#killAfterFirstAnimation();
+            this.#killMe(groupIndex, spriteIndex);
           }
         }
       }
@@ -574,13 +570,16 @@ export class Sprite {
     }
   }
 
-  #killAfterFirstAnimation() {
-    console.log("First animation is done.");
+  #killMe(groupIndex, spriteIndex) {
+    // console.log("First animation is done.");
     this.viewType = "unset";
     this.anim = null;
     this.animName = "unset";
+
+    this.game.groups[groupIndex].sprites.splice(spriteIndex, 1);
   }
 }
+
 export class Projectile extends Sprite {
   constructor(x, y, width, height, game, velX, velY) {
     super(x, y, width, height, game);
@@ -591,9 +590,29 @@ export class Projectile extends Sprite {
     this.acc = new Vector(0, 0);
   }
 
-  update() {
+  update(deltaTime, groupIndex, spriteIndex) {
     this.x += this.vel.x;
     this.y += this.vel.y;
+
+    if (this.killAfterDistanceVar) {
+      this.distanceTraveled += this.vel.getLen();
+      // console.log(this.vel.getLen());
+      // console.log("Distance traveled: ", this.distanceTraveled);
+
+      if (this.distanceTraveled > this.killAfterDistanceVar) {
+        this.kill(groupIndex, spriteIndex);
+      }
+    }
+  }
+
+  killAfterDistance(distance) {
+    this.killAfterDistanceVar = distance;
+    this.distanceTraveled = 0;
+  }
+
+  kill(groupIndex, spriteIndex) {
+    this.game.groups[groupIndex].sprites.splice(spriteIndex, 1);
+    console.log("Projectile killed.");
   }
 }
 

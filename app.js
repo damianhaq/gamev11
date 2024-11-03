@@ -59,6 +59,12 @@ game.draw = function (deltaTime) {
   drawText(`ground tiles: ${groundCounter}`, 10, 60, game);
   drawText(`leaf tiles: ${leafsCounter}`, 10, 70, game);
   drawText(`roads tiles: ${roads}`, 10, 80, game);
+  drawText(
+    `groups length: ${game.groups.map((g) => g.sprites.length)}`,
+    10,
+    90,
+    game
+  );
 };
 
 game.onClickLMB = function () {
@@ -87,6 +93,7 @@ game.onClickLMB = function () {
   );
 
   flame.addAnim("fly", 0, 0, 64, 64, 11, flameImg);
+  flame.killAfterDistance(1000);
 
   flame.anim.fly.frameTime = 50;
   flame.anim.fly.rotateDeg = angle + 180;
