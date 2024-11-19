@@ -2,6 +2,7 @@ import {
   Character,
   drawText,
   Game,
+  GUI,
   Projectile,
   Sprite,
   Tiled,
@@ -10,7 +11,7 @@ import {
 // import jsonData from "./gamev11map.json" with { type: "json" };
 
 const game = new Game();
-game.init("canvas", 1200, 1000, 3);
+game.init("canvas", 1200, 900, 3);
 game.isDebug = false;
 
 game.createGroup("projectiles");
@@ -25,6 +26,28 @@ flameImg.src = "assets/579.png";
 
 const flameOnGroundImg = new Image();
 flameOnGroundImg.src = "assets/70.png";
+
+const gui = new GUI(game);
+gui.addImage(bigSpritev7);
+gui.addTile(352, 912, 16, 16, "mainWindow", "leftTop");
+gui.addTile(368, 912, 16, 16, "mainWindow", "top");
+gui.addTile(384, 912, 16, 16, "mainWindow", "rightTop");
+gui.addTile(352, 928, 16, 16, "mainWindow", "left");
+gui.addTile(368, 928, 16, 16, "mainWindow", "center");
+gui.addTile(384, 928, 16, 16, "mainWindow", "right");
+gui.addTile(352, 960, 16, 16, "mainWindow", "leftBottom");
+gui.addTile(368, 960, 16, 16, "mainWindow", "bottom");
+gui.addTile(384, 960, 16, 16, "mainWindow", "rightBottom");
+
+const dataToDrawMainWindow = gui.createWindow(
+  8,
+  3,
+  "mainWindow",
+  0,
+  300 - 16 * 3
+);
+console.log("gui", gui);
+console.log("dataToDrawMainWindow", dataToDrawMainWindow);
 
 const map = new Tiled(game, "./gamev11map.json", bigSpritev7);
 
@@ -65,6 +88,8 @@ game.draw = function (deltaTime) {
     90,
     game
   );
+
+  gui.draw(dataToDrawMainWindow);
 };
 
 game.onClickLMB = function () {

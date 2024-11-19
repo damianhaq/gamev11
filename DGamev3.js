@@ -231,6 +231,142 @@ export class Game {
   onMouseMove() {}
 }
 
+export class GUI {
+  constructor(game) {
+    this.game = game;
+    this.windows = [];
+    this.tiles = [];
+    this.img = null;
+  }
+
+  addImage(img) {
+    this.img = img;
+  }
+
+  addTile(x, y, width, height, id, position3x3Type = false) {
+    // check types and console log
+    if (
+      typeof x !== "number" ||
+      typeof y !== "number" ||
+      typeof width !== "number" ||
+      typeof height !== "number" ||
+      typeof id !== "string"
+    ) {
+      console.warn("GUI addTile: Invalid argument(s).");
+      return;
+    }
+
+    // position3x3Type can be only "leftTop", "rightTop", "leftBottom", "rightBottom", "top", "bottom", "left", "right", "center"
+    if (position3x3Type) {
+      if (
+        position3x3Type !== "leftTop" &&
+        position3x3Type !== "rightTop" &&
+        position3x3Type !== "leftBottom" &&
+        position3x3Type !== "rightBottom" &&
+        position3x3Type !== "top" &&
+        position3x3Type !== "bottom" &&
+        position3x3Type !== "left" &&
+        position3x3Type !== "right" &&
+        position3x3Type !== "center"
+      ) {
+        console.warn("GUI addTile: Invalid position3x3Type argument.");
+        return;
+      }
+    }
+
+    // check if id already exists, only when position3x3Type is false
+    if (!position3x3Type) {
+      if (this.tiles.find((tile) => tile.id === id)) {
+        console.warn(`GUI addTile: Tile with id ${id} already exists.`);
+        return;
+      }
+    }
+
+    // add tile
+    this.tiles.push({ x, y, width, height, id, position3x3Type });
+  }
+
+  createWindow(tilesWidth, tilesHeight, id, x, y) {
+    // check if id exist and all 9 tiles exist with this id
+    const tiles = this.tiles.filter((tile) => tile.id === id);
+    if (tiles.length !== 9) {
+      console.warn(`GUI createWindow: Tile with id ${id} does not exist.`);
+      return;
+    }
+
+    const dataToDraw = { tilesWidth, tilesHeight, x, y };
+
+    tiles.forEach((tile) => {
+      if (!tile.position3x3Type) {
+        console.warn(
+          `GUI createWindow: Tile with id ${id} does not have position3x3Type.`
+        );
+        return;
+      }
+
+      dataToDraw[tile.position3x3Type] = {
+        fromX: tile.x,
+        fromY: tile.y,
+        fromWidth: tile.width,
+        fromHeight: tile.height,
+      };
+    });
+
+    return dataToDraw;
+  }
+
+  draw(dataFromCreateWindow) {
+    // 2d loop
+    for (let yPos = 0; yPos < dataFromCreateWindow.tilesHeight; yPos++) {
+      for (let xPos = 0; xPos < dataFromCreateWindow.tilesWidth; xPos++) {
+        // is first or last tile in row or column
+        let string = null;
+
+        if (xPos === 0 && yPos === 0) {
+          string = "leftTop";
+        } else if (xPos === dataFromCreateWindow.tilesWidth - 1 && yPos === 0) {
+          string = "rightTop";
+        } else if (
+          xPos === 0 &&
+          yPos === dataFromCreateWindow.tilesHeight - 1
+        ) {
+          string = "leftBottom";
+        } else if (
+          xPos === dataFromCreateWindow.tilesWidth - 1 &&
+          yPos === dataFromCreateWindow.tilesHeight - 1
+        ) {
+          string = "rightBottom";
+        } else if (yPos === 0) {
+          string = "top";
+        } else if (yPos === dataFromCreateWindow.tilesHeight - 1) {
+          string = "bottom";
+        } else if (xPos === 0) {
+          string = "left";
+        } else if (xPos === dataFromCreateWindow.tilesWidth - 1) {
+          string = "right";
+        } else {
+          string = "center";
+        }
+
+        // draw tile
+        this.game.ctx.drawImage(
+          this.img,
+          dataFromCreateWindow[string].fromX,
+          dataFromCreateWindow[string].fromY,
+          dataFromCreateWindow[string].fromWidth,
+          dataFromCreateWindow[string].fromHeight,
+          dataFromCreateWindow.x +
+            xPos * dataFromCreateWindow[string].fromWidth,
+          dataFromCreateWindow.y +
+            yPos * dataFromCreateWindow[string].fromHeight,
+          dataFromCreateWindow[string].fromWidth,
+          dataFromCreateWindow[string].fromHeight
+        );
+      }
+    }
+  }
+}
+
 export class Sprite {
   constructor(x, y, width, height, game) {
     this.x = x;
