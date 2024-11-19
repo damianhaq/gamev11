@@ -1,7 +1,5 @@
-// version 3.2
-// - in Sprite, Animation can delete itself after animation is done
-// - draw and update every sprite, that is added to some group, is done automatically in gameLoop in game class
-// = sprite can kill itself from group when animation is done or when projectile past some distance
+// version 3.3
+// - new class GUI
 
 // CLASSESS
 
@@ -286,11 +284,11 @@ export class GUI {
     this.tiles.push({ x, y, width, height, id, position3x3Type });
   }
 
-  createWindow(tilesWidth, tilesHeight, id, x, y) {
+  createWindow(tilesWidth, tilesHeight, tileId, x, y) {
     // check if id exist and all 9 tiles exist with this id
-    const tiles = this.tiles.filter((tile) => tile.id === id);
+    const tiles = this.tiles.filter((tile) => tile.id === tileId);
     if (tiles.length !== 9) {
-      console.warn(`GUI createWindow: Tile with id ${id} does not exist.`);
+      console.warn(`GUI createWindow: Tile with id ${tileId} does not exist.`);
       return;
     }
 
@@ -299,7 +297,7 @@ export class GUI {
     tiles.forEach((tile) => {
       if (!tile.position3x3Type) {
         console.warn(
-          `GUI createWindow: Tile with id ${id} does not have position3x3Type.`
+          `GUI createWindow: Tile with id ${tileId} does not have position3x3Type.`
         );
         return;
       }

@@ -46,6 +46,8 @@ const dataToDrawMainWindow = gui.createWindow(
   0,
   300 - 16 * 3
 );
+const dataToDrawSecondWindow = gui.createWindow(3, 3, "mainWindow", 10, 100);
+
 console.log("gui", gui);
 console.log("dataToDrawMainWindow", dataToDrawMainWindow);
 
@@ -90,6 +92,7 @@ game.draw = function (deltaTime) {
   );
 
   gui.draw(dataToDrawMainWindow);
+  gui.draw(dataToDrawSecondWindow);
 };
 
 game.onClickLMB = function () {
